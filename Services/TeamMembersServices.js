@@ -5,6 +5,13 @@ exports.addATeamMember=async(createdAdminDetails,teamMemberDetails)=>{
    const {UserName,UserPhone,UserEmail,UserRole}=teamMemberDetails;
    console.log("Team Member Details",teamMemberDetails);
    console.log("Created Admin Details",createdAdminDetails);
+    if(!createdAdminDetails || !UserName || !UserPhone || !UserEmail || !UserRole){
+        throw new Error("Please provide all the required values createdAdminDetails, UserName, UserPhone, UserEmail and UserRole");
+    }
+    const checkifTeamMemberExists=await TeamMembers.findOne({createdAdmin:createdAdminDetails,Email:UserEmail});
+    if(checkifTeamMemberExists){
+        throw new Error("Team Member already exists with this credentials");
+    }
    const newTeamMember=new TeamMembers({
     createdAdmin:createdAdminDetails,
        FullName:UserName,

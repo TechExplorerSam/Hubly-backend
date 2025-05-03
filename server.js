@@ -16,7 +16,7 @@ const TeamMemberRoutes=require('./Routes/Teammemberroutes');
 const AnalyticsRoutes=require('./Routes/Analyticsroutes');
 app.use(cors(
   {
-    origin:'https://hubly-frontend-sam.vercel.app/',
+    origin:'https://hubly-frontend-sam.vercel.app',
     methods:['GET','POST','PUT','DELETE'],
     credentials:true,
   }
