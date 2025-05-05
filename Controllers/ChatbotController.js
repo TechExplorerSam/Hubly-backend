@@ -98,25 +98,25 @@ exports.getChatbotUserDetails=async(req,res)=>{
     }
 }
 
-exports.getChatbotStylesForUser=async(req,res)=>{
+exports.getChatbotStylesForUser = async (req, res) => {
     try {
-        console.log("Request query:",req.query);
-        const AdminId=req.query.AdminId;
-        if(!AdminId){
-            return res.status(400).json({message:"Please provide the creating admin id"});
-        }
-        const styles=await ChatbotServices.getChatbotStyles(AdminId);
-        if(!styles){
-            return res.status(404).json({message:"Chatbot styles not found"});
-        }
-        return res.status(200).json({message:"Chatbot styles fetched successfully",data:styles});
+      const styles = await ChatbotServices.getChatbotStyles();
+      
+      if (!styles) {
+        return res.status(404).json({ message: "Chatbot styles not found" });
+      }
+  
+      return res.status(200).json({
+        message: "Chatbot styles fetched successfully",
+        data: styles
+      });
+  
+    } catch (error) {
+      console.error("Error in getChatbotStylesForUser:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-    catch (error) {
-        console.error("Error in getChatbotStyles:", error);
-        return res.status(500).json({message:"Internal server error"});
-    }
-}
-
+  };
+  
 exports.loginChatbotUser=async(req,res)=>{
     try {
         console.log("Request Body:",req.body);
