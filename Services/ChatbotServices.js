@@ -197,30 +197,16 @@ exports.getChatbotUserDetails=async(userId)=>{
     return user;
 }
 
-exports.getChatbotStyles = async (creatingAdminId) => {
-    if (!creatingAdminId) {
-      throw new Error("Please provide the creating admin id");
-    }
-  
-    const admin = await User.findById(creatingAdminId);
-    if (!admin) {
-      const teamMember = await TeamMebers.findById(creatingAdminId);
-      if (!teamMember) {
-        throw new Error("Team member admin not found in database");
-      }
-      if (teamMember.Role !== "Admin") {
-        throw new Error("You are not authorized to access this data as you are a team member but don't have the role as admin");
-      }
-    }
-  
-    const styles = await Chatbotstyles.findOne({ creatingAdminId: creatingAdminId });
-    if (!styles || styles.length === 0) {
-      throw new Error("Chatbot styles not found in the database");
-    }
-  
-    console.log("Chatbot Styles:", styles);
-    return styles;
-  };
+exports.getChatbotStyles = async () => {
+  const styles = await Chatbotstyles.findOne(); 
+  if (!styles) {
+    throw new Error("Chatbot styles not found in the database");
+  }
+
+  console.log("Chatbot Styles:", styles);
+  return styles;
+};
+
   
   exports.loginChatbotUser = async (Email,FullName) => {
     if (!FullName) {
