@@ -8,7 +8,7 @@ exports.assignToLeastLoadedWithTicketsAdmin = async () => {
     const admins = await User.find({ UserRole: 'Admin' });
   
     let leastLoadedAdmin = null;
-    let minTickets = 2;
+    let minTickets = Infinity;
   
     for (const admin of admins) {
       const ticketCount = await Tickets.countDocuments({
