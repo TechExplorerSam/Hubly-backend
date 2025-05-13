@@ -12,10 +12,10 @@ exports.assignToLeastLoadedWithTicketsAdmin = async () => {
   
     for (const admin of admins) {
       const ticketCount = await Tickets.countDocuments({
-        ticketAssignedtoUser: admin._id,
+        ticketAssignedToUser: admin._id,
         ticketStatus: { $ne: "Resolved" }
       });
-  
+       console.log("Ticket Count",ticketCount);
       if (ticketCount < minTickets) {
         minTickets = ticketCount;
         leastLoadedAdmin = admin;
