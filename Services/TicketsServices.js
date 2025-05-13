@@ -5,61 +5,59 @@ const ChatbotUser=require('../Models/ChatbotUsers');
 const Chats = require('../Models/Chats');
 
 exports.assignToLeastLoadedWithTicketsAdmin = async () => {
-    const admins = await User.find({ UserRole: 'Admin' });
-  
-    let leastLoadedAdmin = null;
-    let minTickets = Infinity;
-  
-    for (const admin of admins) {
-      const ticketCount = await Tickets.countDocuments({
-        ticketAssignedToUser: admin._id,
-        ticketStatus: { $ne: "Resolved" }
-      });
-       console.log("Ticket Count",ticketCount);
-      if (ticketCount < minTickets) {
-        minTickets = ticketCount;
-        leastLoadedAdmin = admin;
-      }
+  const admins = await User.find({ UserRole: 'Admin' });
+
+  let leastLoadedAdmin = null;
+  let minTickets = Infinity;
+
+  for (const admin of admins) {
+    const ticketCount = await Tickets.countDocuments({
+      ticketAssignedToUser: admin._id,
+      ticketStatus: { $ne: "Resolved" }
+    });
+    console.log(`Admin: ${admin._id}, Ticket Count: ${ticketCount}`);
+
+    if (ticketCount < minTickets) {
+      minTickets = ticketCount;
+      leastLoadedAdmin = admin;
     }
-  
-    return leastLoadedAdmin;
-  };
-  
- exports. createaNewTicketandAssignToUser=async(ticketData)=>{
-    console.log("Ticket Data",ticketData);
-    const {ticketTitle,ticketDescription,ticketPostedTime,ticketCreatedByUser}=ticketData;
-   
-    const ticketCreatedByExistingUser=await User.findById(ticketCreatedByUser);
-    if(!ticketCreatedByExistingUser){
-       const userthroughchatbot=await ChatbotUser.findById(ticketCreatedByUser);
-       if(!userthroughchatbot){
-        throw new Error("Ticket Creating  User not found");
-       }
+  }
+
+  return leastLoadedAdmin;
+};
+
+
+exports.createaNewTicketandAssignToUser = async (ticketData) => {
+  const { ticketTitle, ticketDescription, ticketPostedTime, ticketCreatedByUser } = ticketData;
+
+  const ticketCreatedByExistingUser = await User.findById(ticketCreatedByUser);
+  if (!ticketCreatedByExistingUser) {
+    const userthroughchatbot = await ChatbotUser.findById(ticketCreatedByUser);
+    if (!userthroughchatbot) {
+      throw new Error("Ticket Creating User not found");
     }
-    const ticketAssignedtoUser=await User.find({UserRole:"Admin"});
-    if(!ticketAssignedtoUser){
-        throw new Error("No Admins found for this ticket");
-    } 
-    const assignedAdmin = await exports.assignToLeastLoadedWithTicketsAdmin(); 
-    console.log("Assigned Admin",assignedAdmin._id);
-   
-   
-    const newTicket=new Tickets({
-        ticketTitle:ticketTitle,
-        ticketDescription:ticketDescription,
-        ticketPostedTime:ticketPostedTime,
-        ticketstatus:"Pending",
-        ticketCreatedByUser:ticketCreatedByUser,
-        ticketAssignedToUser:assignedAdmin._id,
+  }
 
+  const assignedAdmin = await exports.assignToLeastLoadedWithTicketsAdmin();
+  if (!assignedAdmin) {
+    throw new Error("No available admin found to assign the ticket.");
+  }
 
-        })
-        const savedTicket=await newTicket.save();
-       
-        return savedTicket;
+  console.log("Assigned Admin ID:", assignedAdmin._id);
 
-   
-}
+  const newTicket = new Tickets({
+    ticketTitle,
+    ticketDescription,
+    ticketPostedTime,
+    ticketStatus: "Pending", 
+    ticketCreatedByUser,
+    ticketAssignedToUser: assignedAdmin._id
+  });
+
+  const savedTicket = await newTicket.save();
+  return savedTicket;
+};
+
 
 exports.assignTicketToTeamMembers = async (ticketId, assigningUserId, teamMemberId) => {
     const ticket = await Tickets.findById(ticketId);
