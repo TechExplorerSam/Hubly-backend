@@ -4,27 +4,14 @@ const TeamMembers=require('../Models/TeamMembers')
 const ChatbotUser=require('../Models/ChatbotUsers');
 const Chats = require('../Models/Chats');
 
-exports.assignToLeastLoadedWithTicketsAdmin = async () => {
-  const admins = await User.find({ UserRole: 'Admin' });
-
-  let leastLoadedAdmin = null;
-  let minTickets = Infinity;
-
-  for (const admin of admins) {
-    const ticketCount = await Tickets.countDocuments({
-      ticketAssignedToUser: admin._id,
-      ticketStatus: { $ne: "Resolved" }
-    });
-    console.log(`Admin: ${admin._id}, Ticket Count: ${ticketCount}`);
-
-    if (ticketCount < minTickets) {
-      minTickets = ticketCount;
-      leastLoadedAdmin = admin;
-    }
+exports.assignPrimaryAdmin = async () => {
+  const admin = await User.findOne({ UserRole: 'Admin' });
+  if (!admin) {
+    throw new Error("No primary admin found");
   }
-
-  return leastLoadedAdmin;
+  return admin;
 };
+
 
 
 exports.createaNewTicketandAssignToUser = async (ticketData) => {
@@ -38,7 +25,7 @@ exports.createaNewTicketandAssignToUser = async (ticketData) => {
     }
   }
 
-  const assignedAdmin = await exports.assignToLeastLoadedWithTicketsAdmin();
+  const assignedAdmin = await exports.assignPrimaryAdmin();
   if (!assignedAdmin) {
     throw new Error("No available admin found to assign the ticket.");
   }
