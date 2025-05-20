@@ -47,81 +47,90 @@ exports.createaNewTicketandAssignToUser = async (ticketData) => {
 
 
 exports.assignTicketToTeamMembers = async (ticketId, assigningUserId, teamMemberId) => {
-    const ticket = await Tickets.findById(ticketId);
-    if (!ticket) {
-      throw new Error("Ticket not found in database");
-    }
-  
-    let assigningUser = await User.findById(assigningUserId);
-    let isTeamMemberAssigner = false;
-  
-    if (!assigningUser) {
-      assigningUser = await TeamMembers.findById(assigningUserId);
-      if (!assigningUser) {
-        throw new Error("Assigning user not found in users or team members");
-      }
-      isTeamMemberAssigner = true;
-    }
-  
-    if (assigningUserId.toString() === teamMemberId.toString()) {
-      throw new Error("Cannot assign ticket to yourself");
-    }
-  
-    const targetTeamMember = await TeamMembers.findById(teamMemberId);
-    if (!targetTeamMember) {
-      throw new Error("Target team member not found in database");
-    }
-  
-    if (
-      ticket.ticketAssignedToTeamMember &&
-      ticket.ticketAssignedToTeamMember.toString() === teamMemberId.toString()
-    ) {
-      throw new Error("Ticket already assigned to this team member");
-    }
-  
-    ticket.ticketAssignedToTeamMember = targetTeamMember._id;
-    ticket.ticketAssignedToTeamMemberAccess = "Granted";
-  
-    targetTeamMember.AssignedToTicket = ticket._id;
-  
-    let accessEntry = targetTeamMember.AccessToaTicket.find(
-      entry => entry.AssignedticketId.toString() === ticket._id.toString()
-    );
-  
-    if (!accessEntry) {
-      targetTeamMember.AccessToaTicket.push({
-        AssignedticketId: ticket._id,
-        Ticketaccess: "Granted"
-      });
-    } else {
-      accessEntry.Ticketaccess = "Granted";
-    }
-  
-    if (!isTeamMemberAssigner) {
-      assigningUser.UserAccessToTicket = "Revoked";
-    }
-  
-    const chats = await Chats.findOne({ TicketDetails: ticketId });
-    if (!chats) {
-      throw new Error("No Chats Found for this Ticket");
-    }
-  
-    if (chats.ChatAssignedToTeamMemberUser) {
-      throw new Error("Ticket already assigned to a team member in chat");
-    }
-  
-    chats.ChatAssignedToTeamMemberUser = targetTeamMember._id;
-  
-    await Promise.all([
-      ticket.save(),
-      targetTeamMember.save(),
-      chats.save(),
-      assigningUser.save()
-    ]);
-  
-    return ticket;
-  };
+  const ticket = await Tickets.findById(ticketId);
+  if (!ticket) {
+    throw new Error("Ticket not found in database");
+  }
 
+  let assigningUser = await User.findById(assigningUserId);
+  let isTeamMemberAssigner = false;
+
+  if (!assigningUser) {
+    assigningUser = await TeamMembers.findById(assigningUserId);
+    if (!assigningUser) {
+      throw new Error("Assigning user not found in users or team members");
+    }
+    isTeamMemberAssigner = true;
+  }
+
+  if (assigningUserId.toString() === teamMemberId.toString()) {
+    throw new Error("Cannot assign ticket to yourself");
+  }
+
+  const targetTeamMember = await TeamMembers.findById(teamMemberId);
+  if (!targetTeamMember) {
+    throw new Error("Target team member not found in database");
+  }
+
+  if (isTeamMemberAssigner) {
+    const isSubTeamMember = assigningUser.TeamMembersTeam.some(
+      memberId => memberId.toString() === teamMemberId.toString()
+    );
+
+    if (!isSubTeamMember) {
+      throw new Error("You can only assign tickets to your own sub-team members");
+    }
+  }
+
+  if (
+    ticket.ticketAssignedToTeamMember &&
+    ticket.ticketAssignedToTeamMember.toString() === teamMemberId.toString()
+  ) {
+    throw new Error("Ticket already assigned to this team member");
+  }
+
+  ticket.ticketAssignedToTeamMember = targetTeamMember._id;
+  ticket.ticketAssignedToTeamMemberAccess = "Granted";
+
+  targetTeamMember.AssignedToTicket = ticket._id;
+
+  let accessEntry = targetTeamMember.AccessToaTicket.find(
+    entry => entry.AssignedticketId.toString() === ticket._id.toString()
+  );
+
+  if (!accessEntry) {
+    targetTeamMember.AccessToaTicket.push({
+      AssignedticketId: ticket._id,
+      Ticketaccess: "Granted"
+    });
+  } else {
+    accessEntry.Ticketaccess = "Granted";
+  }
+
+  if (!isTeamMemberAssigner) {
+    assigningUser.UserAccessToTicket = "Revoked";
+  }
+
+  const chats = await Chats.findOne({ TicketDetails: ticketId });
+  if (!chats) {
+    throw new Error("No Chats Found for this Ticket");
+  }
+
+  if (chats.ChatAssignedToTeamMemberUser) {
+    throw new Error("Ticket already assigned to a team member in chat");
+  }
+
+  chats.ChatAssignedToTeamMemberUser = targetTeamMember._id;
+
+  await Promise.all([
+    ticket.save(),
+    targetTeamMember.save(),
+    chats.save(),
+    assigningUser.save()
+  ]);
+
+  return ticket;
+};
 exports.UpdateTicketStatus=async(ticketId,ticketStatus)=>{
     console.log("Ticket ID",ticketId);
     const ticket=await Tickets.findById(ticketId);
