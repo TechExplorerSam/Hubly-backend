@@ -116,9 +116,14 @@ exports.assignTicketToTeamMembers = async (ticketId, assigningUserId, teamMember
     throw new Error("No Chats Found for this Ticket");
   }
 
-  if (chats.ChatAssignedToTeamMemberUser) {
-    throw new Error("Ticket already assigned to a team member in chat");
-  }
+ if (
+  chats.ChatAssignedToTeamMemberUser &&
+  chats.ChatAssignedToTeamMemberUser.toString() === teamMemberId.toString()
+) {
+  throw new Error("Ticket already assigned to this team member in chat");
+}
+
+
 
   chats.ChatAssignedToTeamMemberUser = targetTeamMember._id;
 
