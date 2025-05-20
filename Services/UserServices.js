@@ -19,7 +19,29 @@ exports.loginExisitngUser = async (loggingUserDetails) => {
         }
         const teamMemberAdminPassword = await User.findById(TeamMemberwithEmail.createdAdmin);
         if (!teamMemberAdminPassword) {
-            throw new Error("Admin who created this Team Member was not found");
+            const teamMemberAdmin = await TeamMembers.findById(TeamMemberwithEmail.createdAdmin);
+            if (!teamMemberAdmin) {
+                throw new Error("Admin who created this Team Member was not found");
+            }
+            const teaMemberAdminPassword=await User.findById(teamMemberAdmin.createdAdmin);
+            if (!teaMemberAdminPassword) {
+                throw new Error("Admin who created this Team Member was not found");
+            }
+            const isPasswordValid = await bcrypt.compare(password,teaMemberAdminPassword.password);
+            if (!isPasswordValid) {
+                throw new Error("Invalid password: must match the Admin's password");
+            }
+            const token = jwt.sign({
+                _id: TeamMemberwithEmail._id
+            }, process.env.JWT_SECRET_KEY, { expiresIn: "1d" });
+            return {
+                _id: TeamMemberwithEmail._id,
+                fullName: TeamMemberwithEmail.FullName,
+                teamRole: TeamMemberwithEmail.TeamRole,
+                createdByAdmin: TeamMemberwithEmail.createdAdmin,
+                isTeamMember: true,
+                token
+            };
         }
         const isPasswordValid = await bcrypt.compare(password, teamMemberAdminPassword.password);
         if (!isPasswordValid) {
