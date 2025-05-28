@@ -22,7 +22,7 @@ src/
 
 - Ticket APIs: Create, assign, resolve, search, filter
 
--Team APIs: Invite, validate email(Check wheather they are assigned by the admin into the sysyeem or not in login page they can enter their username or admin assinged email address ), manage roles
+-Team APIs: Invite, validate email(Check wheather they are assigned by the admin into the system or not in login page they can enter their username or admin assinged email address ), manage roles
 
 - Chat APIs: Support conversation per ticket
 
